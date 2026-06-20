@@ -11,5 +11,8 @@ export default defineConfig({
         ws: true
       }
     }
+  },
+  define: {
+    // Will be replaced at build time
   }
 })

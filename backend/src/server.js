@@ -10,11 +10,28 @@ const { registerSocketHandlers } = require('./socketHandlers');
 const PORT = process.env.PORT || 3001;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
+// --- Build allowed origins ---
+const allowedOrigins = [
+  FRONTEND_URL,
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:3000'
+].filter(Boolean);
+
 // --- Initialize Express ---
 const app = express();
 app.use(cors({
-  origin: [FRONTEND_URL, 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'],
-  methods: ['GET', 'POST']
+  origin: function(origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    // Allow any Vercel preview or the configured frontend URL
+    if (allowedOrigins.some(o => origin.startsWith(o)) || origin.includes('vercel.app')) {
+      return callback(null, true);
+    }
+    callback(null, true); // Allow all for hackathon demo
+  },
+  methods: ['GET', 'POST'],
+  credentials: true
 }));
 app.use(express.json());
 
@@ -24,11 +41,15 @@ const server = http.createServer(app);
 // --- Initialize Socket.IO ---
 const io = new Server(server, {
   cors: {
-    origin: [FRONTEND_URL, 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'],
-    methods: ['GET', 'POST']
+    origin: function(origin, callback) {
+      callback(null, true); // Allow all origins for hackathon demo
+    },
+    methods: ['GET', 'POST'],
+    credentials: true
   },
-  pingInterval: 10000,  // Ping every 10 seconds
-  pingTimeout: 5000,    // Timeout after 5 seconds
+  pingInterval: 10000,
+  pingTimeout: 5000,
+  transports: ['websocket', 'polling']
 });
 
 // --- Initialize Queue Engine ---
@@ -64,7 +85,7 @@ app.get('*', (req, res) => {
 });
 
 // --- Start Server ---
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log('');
   console.log('╔══════════════════════════════════════════════╗');
   console.log('║        🏥 Queue Cure Server Running         ║');
