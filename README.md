@@ -61,7 +61,8 @@
 ---
 
 ## 🚀 Getting Started
-
+FRONTEND DEPLOYED AT :https://wooble-hackathon.vercel.app/
+BACKEND DEPLOYED AT  :https://wooble-hackathon.onrender.com
 ### Prerequisites
 - Node.js 18+ installed
 - npm 9+
